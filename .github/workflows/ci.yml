@@ -1,4 +1,4 @@
-name: CI/CD Muilt serviços
+name: CI/CD : Mult-Docker
 
 on:
   push:
@@ -10,34 +10,53 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Baixa o código do repositório
+      # Baixa o código
       - name: Checkout código
         uses: actions/checkout@v4
 
-      # Build da imagem de testes
-      - name: Build imagem de teste
-        run: docker build -t absjrdev/react-test -f ./client/Dockerfile.dev ./client
+      # Configura Node.js
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
 
-      # Roda os testes
+      # Cache das dependências (acelera MUITO)
+      - name: Cache npm
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-${{ hashFiles('client/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-
+
+      # Instala dependências do client
+      - name: Instalar dependências
+        run: npm install
+        working-directory: ./client
+
+      # Roda testes (sem Docker 🚀)
       - name: Rodar testes
-        run: docker run absjrdev/react-test npm test -- --coverage
+        run: npm test -- --coverage
+        working-directory: ./client
 
-      # Build das imagens finais
-      - name: Build imagens finais
+      # Build das imagens Docker (só depois que testes passam)
+      - name: Build imagens Docker
         run: |
-          docker build -t absjrdev/multi-client ./client
-          docker build -t absjrdev/multi-nginx ./nginx
-          docker build -t absjrdev/multi-server ./server
-          docker build -t absjrdev/multi-worker ./worker
+          docker build -t absjrdev/multi-client:latest ./client
+          docker build -t absjrdev/multi-nginx:latest ./nginx
+          docker build -t absjrdev/multi-server:latest ./server
+          docker build -t absjrdev/multi-worker:latest ./worker
 
-      # Login no Docker Hub usando secrets
+      # Login no Docker Hub
       - name: Login no Docker Hub
+        if: github.event_name == 'push'
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
-      # Push das imagens para o Docker Hub
+      # Push das imagens (só em push, não em PR)
       - name: Push das imagens
+        if: github.event_name == 'push'
         run: |
-          docker push absjrdev/multi-client
-          docker push absjrdev/multi-nginx
-          docker push absjrdev/multi-server
-          docker push absjrdev/multi-worker
+          docker push absjrdev/multi-client:latest
+          docker push absjrdev/multi-nginx:latest
+          docker push absjrdev/multi-server:latest
+          docker push absjrdev/multi-worker:latest
