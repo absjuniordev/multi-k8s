@@ -1,4 +1,4 @@
-name: CI/CD : Mult-Docker
+name: CI/CD  Mult-Docker
 
 on:
   push:
