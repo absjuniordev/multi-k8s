@@ -1,4 +1,4 @@
-name: CI/CD  Mult-Docker
+name: CI/CD Multi-Docker
 
 on:
   push:
@@ -10,17 +10,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Baixa o código
+      # 1. Checkout do código
       - name: Checkout código
         uses: actions/checkout@v4
 
-      # Configura Node.js
+      # 2. Setup Node
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 18
 
-      # Cache das dependências (acelera MUITO)
+      # 3. Cache npm
       - name: Cache npm
         uses: actions/cache@v4
         with:
@@ -29,30 +29,31 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-npm-
 
-      # Instala dependências do client
+      # 4. Instalar dependências
       - name: Instalar dependências
         run: npm install
         working-directory: ./client
 
-      # Roda testes (sem Docker 🚀)
+      # 5. Rodar testes
       - name: Rodar testes
         run: npm test -- --coverage
         working-directory: ./client
 
-      # Build das imagens Docker (só depois que testes passam)
+      # 6. Build imagens Docker
       - name: Build imagens Docker
+        if: github.event_name == 'push'
         run: |
           docker build -t absjrdev/multi-client:latest ./client
           docker build -t absjrdev/multi-nginx:latest ./nginx
           docker build -t absjrdev/multi-server:latest ./server
           docker build -t absjrdev/multi-worker:latest ./worker
 
-      # Login no Docker Hub
+      # 7. Login Docker Hub
       - name: Login no Docker Hub
         if: github.event_name == 'push'
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
-      # Push das imagens (só em push, não em PR)
+      # 8. Push das imagens
       - name: Push das imagens
         if: github.event_name == 'push'
         run: |
@@ -60,3 +61,21 @@ jobs:
           docker push absjrdev/multi-nginx:latest
           docker push absjrdev/multi-server:latest
           docker push absjrdev/multi-worker:latest
+
+      # 9. Gerar deploy.zip (IMPORTANTÍSSIMO)
+      - name: Gerar pacote de deploy
+        if: github.event_name == 'push'
+        run: zip -r deploy.zip docker-compose.yml
+
+      # 10. Deploy AWS Elastic Beanstalk
+      - name: Deploy to Elastic Beanstalk
+        if: github.event_name == 'push'
+        uses: einaregilsson/beanstalk-deploy@v21
+        with:
+          aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          application_name: multi-docker
+          environment_name: MultiDocker-env
+          region: sa-east-1 
+          version_label: ${{ github.sha }}
+          deployment_package: deploy.zip
