@@ -77,5 +77,5 @@ jobs:
           application_name: multi-docker
           environment_name: MultiDocker-env
           region: sa-east-1 
-          version_label: ${{ github.sha }}
+          version_label: ${{ github.sha }}-${{ github.run_id }} 
           deployment_package: deploy.zip
