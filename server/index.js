@@ -9,6 +9,8 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
+const useSSL = process.env.PGSSL === 'true';
+
 // Postgres Client Setup
 const { Pool } = require('pg');
 const pgClient = new Pool({
@@ -17,10 +19,7 @@ const pgClient = new Pool({
   database: keys.pgDatabase,
   password: keys.pgPassword,
   port: keys.pgPort,
-  ssl:
-    process.env.NODE_ENV !== 'production'
-      ? false
-      : { rejectUnauthorized: false },
+  ssl: useSSL ? { rejectUnauthorized: false } : false,
 });
 
 pgClient.on('connect', (client) => {
