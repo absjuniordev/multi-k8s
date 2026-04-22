@@ -68,14 +68,14 @@ jobs:
         run: zip -r deploy.zip docker-compose.yml
 
       # 10. Deploy AWS Elastic Beanstalk
-      - name: Deploy to Elastic Beanstalk
-        if: github.event_name == 'push'
-        uses: einaregilsson/beanstalk-deploy@v21
-        with:
-          aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          application_name: multi-docker
-          environment_name: Multi-Docker-env
-          region: sa-east-1 
-          version_label: ${{ github.sha }}-${{ github.run_id }} 
-          deployment_package: deploy.zip
+      # - name: Deploy to Elastic Beanstalk
+      # if: github.event_name == 'push'
+      # uses: einaregilsson/beanstalk-deploy@v21
+      # with:
+      #   aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #   aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #   application_name: multi-docker
+      #   environment_name: Multi-Docker-env
+      #   region: sa-east-1 
+      #   version_label: ${{ github.sha }}-${{ github.run_id }} 
+      #   deployment_package: deploy.zip
