@@ -25,18 +25,18 @@ class Fib extends Component {
     });
   }
 
-handleSubmit = async (event) => {
-  event.preventDefault();
+  handleSubmit = async (event) => {
+    event.preventDefault();
 
-  await axios.post('/api/values', {
-    index: this.state.index,
-  });
+    await axios.post('/api/values', {
+      index: this.state.index,
+    });
 
-  await this.fetchValues();
-  await this.fetchIndexes();
-
-  this.setState({ index: '' });
-};
+      this.fetchValues();
+      this.fetchIndexes();
+      
+    this.setState({ index: '' });
+  };
 
   renderSeenIndexes() {
     return this.state.seenIndexes.map(({ number }) => number).join(', ');
@@ -60,7 +60,7 @@ handleSubmit = async (event) => {
     return (
       <div>
         <form onSubmit={this.handleSubmit}>
-          <label>Enter your index: </label>
+          <label>Enter your index:</label>
           <input
             value={this.state.index}
             onChange={(event) => this.setState({ index: event.target.value })}
