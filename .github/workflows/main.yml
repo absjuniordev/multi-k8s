@@ -42,8 +42,8 @@ jobs:
       - name: Connect GKE
         run: |
           gcloud container clusters get-credentials ${{ secrets.GKE_CLUSTER }} \
-          --zone ${{ secrets.GKE_ZONE }} \
-          --project ${{ secrets.GCP_PROJECT_ID }}
+           --region ${{ secrets.GKE_REGION }} \
+           --project ${{ secrets.GCP_PROJECT_ID }}
 
       - name: Deploy Kubernetes
         run: |
