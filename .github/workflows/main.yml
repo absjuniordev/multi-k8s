@@ -38,6 +38,13 @@ jobs:
 
       - name: Setup Gcloud
         uses: google-github-actions/setup-gcloud@v2
+        
+      - name: Debug Variables
+        run: |
+          echo "Cluster: ${{ secrets.GKE_CLUSTER }}"
+          echo "Region: ${{ secrets.GKE_REGION }}"
+          echo "Project: ${{ secrets.GCP_PROJECT_ID }}"    
+
 
       - name: Connect GKE
         run: |
