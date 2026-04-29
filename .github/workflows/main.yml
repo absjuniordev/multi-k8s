@@ -9,43 +9,57 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
 
+    env:
+      USE_GKE_GCLOUD_AUTH_PLUGIN: "True"
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Docker Hub Login
       - name: Docker Login
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
+      # Build das imagens
       - name: Build Images
         run: |
           docker build -t absjrdev/multi-client ./client
           docker build -t absjrdev/multi-server ./server
           docker build -t absjrdev/multi-worker ./worker
 
+      # Push das imagens
       - name: Push Images
         run: |
           docker push absjrdev/multi-client
           docker push absjrdev/multi-server
           docker push absjrdev/multi-worker
 
+      # Autenticação Google Cloud
       - name: Auth Google Cloud
         uses: google-github-actions/auth@v2
         with:
           credentials_json: '${{ secrets.GCP_SA_KEY }}'
 
+      # Instala gcloud CLI
       - name: Setup Gcloud
         uses: google-github-actions/setup-gcloud@v2
-        
-  
+
+      # Instala plugin de autenticação do GKE
+      - name: Install GKE Auth Plugin
+        run: |
+          gcloud components install gke-gcloud-auth-plugin --quiet
+
+      # Conecta no cluster GKE
       - name: Connect GKE
         run: |
           gcloud container clusters get-credentials ${{ secrets.GKE_CLUSTER }} \
-           --region ${{ secrets.GKE_REGION }} \
-           --project ${{ secrets.GCP_PROJECT_ID }}
+            --region ${{ secrets.GKE_REGION }} \
+            --project ${{ secrets.GCP_PROJECT_ID }}
 
+      # Deploy Kubernetes
       - name: Deploy Kubernetes
         run: |
           kubectl apply -f k8s/
